@@ -6,6 +6,7 @@ export interface Participant {
   isMuted?: boolean;
   isCameraOff?: boolean;
   isSpeaking?: boolean;
+  avatarUrl?: string | null;
 }
 
 export interface Room {

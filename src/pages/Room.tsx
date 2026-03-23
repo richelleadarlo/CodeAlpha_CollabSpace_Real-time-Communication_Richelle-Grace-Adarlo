@@ -208,6 +208,7 @@ export default function Room() {
       color: 'hsl(162 63% 41%)',
       isMuted,
       isSpeaking: false,
+      avatarUrl: profile?.avatar_url,
     },
     ...mockParticipants.slice(0, 4).map((p, i) => ({
       ...p,

@@ -46,7 +46,7 @@ function VideoTile({ participant, isPinned, onPin, stream, isLocal }: VideoTileP
           className="absolute inset-0 w-full h-full object-cover"
         />
       ) : (
-        <Avatar initials={participant.initials} color={participant.color} size="lg" isSpeaking={participant.isSpeaking} />
+        <Avatar initials={participant.initials} color={participant.color} size="lg" isSpeaking={participant.isSpeaking} avatarUrl={participant.avatarUrl} />
       )}
 
       <div className="absolute bottom-3 left-3 flex items-center gap-2">
