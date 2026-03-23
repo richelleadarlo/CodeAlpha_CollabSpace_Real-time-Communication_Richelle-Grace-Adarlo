@@ -23,6 +23,7 @@ export default function Dashboard() {
   const [newRoomName, setNewRoomName] = useState('');
   const [creatingRoom, setCreatingRoom] = useState(false);
   const [rooms, setRooms] = useState<RoomRow[]>([]);
+  const [avatarLoadError, setAvatarLoadError] = useState(false);
 
   useEffect(() => {
     async function loadRooms() {
@@ -34,6 +35,10 @@ export default function Dashboard() {
     }
     loadRooms();
   }, []);
+
+  useEffect(() => {
+    setAvatarLoadError(false);
+  }, [profile?.avatar_url]);
 
   const filtered = rooms.filter(r =>
     r.name.toLowerCase().includes(search.toLowerCase())
@@ -78,8 +83,17 @@ export default function Dashboard() {
       <div className="relative z-10 min-h-screen flex flex-col">
         <header className="flex items-center justify-between px-6 py-4 animate-reveal" style={{ animationDelay: '0ms' }}>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.934a.5.5 0 0 0-.777-.416L16 11"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>
+            <div className="w-10 h-10 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center overflow-hidden">
+              {profile?.avatar_url && !avatarLoadError ? (
+                <img
+                  src={profile.avatar_url}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                  onError={() => setAvatarLoadError(true)}
+                />
+              ) : (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.934a.5.5 0 0 0-.777-.416L16 11"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>
+              )}
             </div>
             <span className="font-semibold text-foreground text-lg">CollabSpace</span>
           </div>
