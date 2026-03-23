@@ -2,9 +2,12 @@
 
 A full-stack real-time communication app (similar to Zoom/Google Meet) with video conferencing, screen sharing, and collaborative tools built for my CodeAlpha internship (task 4).
 
-Visit the site live at: 
+Visit the site live at: https://code-alpha-collabspace-communicatio.vercel.app/
 
-![thumbnail/screenshot overview](public/pic.png)
+![thumbnail/screenshot overview 1](public/1.png)
+![thumbnail/screenshot overview 2](public/2.png)
+![thumbnail/screenshot overview 3](public/3.png)
+![thumbnail/screenshot overview 4](public/4.png)
 
 ## Tech Stack
 
