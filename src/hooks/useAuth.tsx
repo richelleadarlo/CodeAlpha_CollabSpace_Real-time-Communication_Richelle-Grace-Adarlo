@@ -5,7 +5,7 @@ import type { User, Session } from '@supabase/supabase-js';
 interface AuthContext {
   user: User | null;
   session: Session | null;
-  profile: { display_name: string; avatar_url: string | null } | null;
+  profile: { display_name: string; avatar_url: string | null; background_url: string | null } | null;
   loading: boolean;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -52,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function fetchProfile(userId: string) {
     const { data } = await supabase
       .from('profiles')
-      .select('display_name, avatar_url')
+      .select('display_name, avatar_url, background_url')
       .eq('user_id', userId)
       .single();
     if (data) setProfile(data);

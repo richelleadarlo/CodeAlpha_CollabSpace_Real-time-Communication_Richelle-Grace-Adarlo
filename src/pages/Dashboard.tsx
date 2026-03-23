@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -77,7 +77,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      <img src={bgLandscape} alt="" className="absolute inset-0 w-full h-full object-cover" />
+      <img src={profile?.background_url || bgLandscape} alt="" className="absolute inset-0 w-full h-full object-cover" />
       <div className="absolute inset-0 bg-background/20" />
 
       <div className="relative z-10 min-h-screen flex flex-col">
