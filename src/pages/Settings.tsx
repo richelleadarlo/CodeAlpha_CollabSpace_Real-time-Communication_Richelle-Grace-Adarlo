@@ -40,13 +40,21 @@ export default function Settings() {
       const safeName = avatarFile.name.replace(/\s+/g, '-');
       const storagePath = `${user.id}/${Date.now()}-${safeName}`;
 
+      // Create bucket if it doesn't exist (gracefully handle if already exists)
+      const { error: bucketError } = await supabase.storage.createBucket('profile-avatars', { public: true }).catch(() => ({ error: null }));
+
       const { error: uploadError } = await supabase.storage
         .from('profile-avatars')
         .upload(storagePath, avatarFile, { upsert: true });
 
       if (uploadError) {
         setSaving(false);
-        toast.error(uploadError.message);
+        // If bucket still doesn't exist after creation attempt, inform user
+        if (uploadError.message?.includes('Bucket not found')) {
+          toast.error('Unable to upload profile picture. Please try again.');
+        } else {
+          toast.error(uploadError.message);
+        }
         return;
       }
 

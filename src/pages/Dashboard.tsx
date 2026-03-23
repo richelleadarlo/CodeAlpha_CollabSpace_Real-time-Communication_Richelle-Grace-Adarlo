@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import RoomCard from '@/components/RoomCard';
 import bgLandscape from '@/assets/bg-landscape.jpg';
-import { Plus, Search, Settings, LogOut, Bell } from 'lucide-react';
+import { Plus, Search, Settings, LogOut } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface RoomRow {
@@ -15,14 +15,6 @@ interface RoomRow {
   created_by: string;
 }
 
-interface PendingInvite {
-  id: string;
-  roomId: string;
-  roomName: string;
-  inviterName: string;
-  createdAt: string;
-}
-
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
@@ -31,8 +23,6 @@ export default function Dashboard() {
   const [newRoomName, setNewRoomName] = useState('');
   const [creatingRoom, setCreatingRoom] = useState(false);
   const [rooms, setRooms] = useState<RoomRow[]>([]);
-  const [pendingInvites, setPendingInvites] = useState<PendingInvite[]>([]);
-  const [showInvitesPanel, setShowInvitesPanel] = useState(false);
 
   useEffect(() => {
     async function loadRooms() {
@@ -44,73 +34,6 @@ export default function Dashboard() {
     }
     loadRooms();
   }, []);
-
-  const loadPendingInvites = useCallback(async () => {
-    if (!user) return;
-
-    const { data, error } = await supabase
-      .from('room_invites')
-      .select('id, room_id, invited_by, created_at')
-      .eq('invited_user_id', user.id)
-      .eq('status', 'pending')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      // Silently ignore if the table doesn't exist yet (migration not run)
-      if (error.message?.includes('relation') || error.message?.includes('does not exist')) {
-        return;
-      }
-      toast.error('Failed to load invites.');
-      return;
-    }
-
-    const roomIds = Array.from(new Set((data || []).map((i) => i.room_id)));
-    const inviterIds = Array.from(new Set((data || []).map((i) => i.invited_by)));
-
-    const [roomsRes, profilesRes] = await Promise.all([
-      roomIds.length
-        ? supabase.from('rooms').select('id, name').in('id', roomIds)
-        : Promise.resolve({ data: [], error: null } as any),
-      inviterIds.length
-        ? supabase.from('profiles').select('user_id, display_name').in('user_id', inviterIds)
-        : Promise.resolve({ data: [], error: null } as any),
-    ]);
-
-    const roomNameMap = new Map((roomsRes.data || []).map((r: any) => [r.id, r.name]));
-    const inviterNameMap = new Map((profilesRes.data || []).map((p: any) => [p.user_id, p.display_name]));
-
-    setPendingInvites((data || []).map((invite) => ({
-      id: invite.id,
-      roomId: invite.room_id,
-      roomName: roomNameMap.get(invite.room_id) || 'Room',
-      inviterName: inviterNameMap.get(invite.invited_by) || 'Someone',
-      createdAt: invite.created_at,
-    })));
-  }, [user]);
-
-  useEffect(() => {
-    if (!user) return;
-
-    loadPendingInvites();
-
-    const channel = supabase
-      .channel(`room-invites:${user.id}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'room_invites', filter: `invited_user_id=eq.${user.id}` },
-        (payload) => {
-          if (payload.eventType === 'INSERT') {
-            toast.info('You have a new room invite.');
-          }
-          loadPendingInvites();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, loadPendingInvites]);
 
   const filtered = rooms.filter(r =>
     r.name.toLowerCase().includes(search.toLowerCase())
@@ -147,31 +70,6 @@ export default function Dashboard() {
     navigate('/login');
   };
 
-  const handleAcceptInvite = async (invite: PendingInvite) => {
-    if (!user) return;
-
-    const { error: updateError } = await supabase
-      .from('room_invites')
-      .update({ status: 'accepted', responded_at: new Date().toISOString() })
-      .eq('id', invite.id)
-      .eq('invited_user_id', user.id);
-
-    if (updateError) {
-      toast.error(updateError.message);
-      return;
-    }
-
-    await supabase.from('room_participants').upsert(
-      { room_id: invite.roomId, user_id: user.id },
-      { onConflict: 'room_id,user_id' }
-    );
-
-    await loadPendingInvites();
-    setShowInvitesPanel(false);
-    toast.success(`Joined ${invite.roomName}.`);
-    navigate(`/room/${invite.roomId}`);
-  };
-
   return (
     <div className="min-h-screen relative overflow-hidden">
       <img src={bgLandscape} alt="" className="absolute inset-0 w-full h-full object-cover" />
@@ -193,49 +91,12 @@ export default function Dashboard() {
                 placeholder="Search rooms..."
                 className="bg-transparent text-base outline-none flex-1 placeholder:text-muted-foreground" />
             </div>
-            <button
-              onClick={() => setShowInvitesPanel((prev) => !prev)}
-              className="glass-card control-btn w-10 h-10 rounded-xl text-muted-foreground hover:text-foreground relative"
-            >
-              <Bell className="w-4 h-4" />
-              {pendingInvites.length > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] px-1 flex items-center justify-center">
-                  {pendingInvites.length}
-                </span>
-              )}
-            </button>
             <button onClick={() => navigate('/settings')} className="glass-card control-btn w-10 h-10 rounded-xl text-muted-foreground hover:text-foreground">
               <Settings className="w-4 h-4" />
             </button>
             <button onClick={handleLogout} className="glass-card control-btn w-10 h-10 rounded-xl text-muted-foreground hover:text-foreground">
               <LogOut className="w-4 h-4" />
             </button>
-
-            {showInvitesPanel && (
-              <div className="absolute right-0 top-12 w-80 glass-card rounded-2xl p-3 shadow-lg border border-white/40 z-30">
-                <p className="text-sm font-semibold text-foreground px-2 pb-2">Room Invites</p>
-                {pendingInvites.length === 0 ? (
-                  <p className="text-sm text-muted-foreground px-2 py-2">No pending invites.</p>
-                ) : (
-                  <div className="space-y-2 max-h-72 overflow-auto">
-                    {pendingInvites.map((invite) => (
-                      <div key={invite.id} className="rounded-xl bg-muted/50 p-3">
-                        <p className="text-sm font-medium text-foreground">{invite.roomName}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">Invited by {invite.inviterName}</p>
-                        <div className="mt-2 flex justify-end">
-                          <button
-                            onClick={() => handleAcceptInvite(invite)}
-                            className="px-3 py-1.5 rounded-lg text-xs bg-primary text-primary-foreground hover:opacity-90"
-                          >
-                            Accept
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         </header>
 

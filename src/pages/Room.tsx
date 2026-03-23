@@ -11,7 +11,7 @@ import Controls from '@/components/Controls';
 import ChatBox from '@/components/ChatBox';
 import FileShare from '@/components/FileShare';
 import Whiteboard from '@/components/Whiteboard';
-import { ChevronLeft, Users, UserPlus } from 'lucide-react';
+import { ChevronLeft, Users } from 'lucide-react';
 import { toast } from 'sonner';
 
 type SidePanel = 'chat' | 'files' | null;
@@ -26,9 +26,6 @@ export default function Room() {
   const [pinnedId, setPinnedId] = useState<string | null>(null);
   const [sharedFiles, setSharedFiles] = useState<SharedFile[]>([]);
   const [isUploadingFile, setIsUploadingFile] = useState(false);
-  const [showInviteDialog, setShowInviteDialog] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState('');
-  const [isSendingInvite, setIsSendingInvite] = useState(false);
 
   const {
     localStream, remoteStreams,
@@ -142,73 +139,6 @@ export default function Room() {
     window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
   }, []);
 
-  const handleInviteByEmail = useCallback(async () => {
-    if (!id || !user) return;
-
-    const normalizedEmail = inviteEmail.trim().toLowerCase();
-    if (!normalizedEmail) {
-      toast.error('Please enter an email.');
-      return;
-    }
-
-    setIsSendingInvite(true);
-
-    const { data: targetProfile, error: targetError } = await supabase
-      .from('profiles')
-      .select('user_id, email, display_name')
-      .eq('email', normalizedEmail)
-      .single();
-
-    if (targetError || !targetProfile) {
-      setIsSendingInvite(false);
-      toast.error('No user found with that email.');
-      return;
-    }
-
-    if (targetProfile.user_id === user.id) {
-      setIsSendingInvite(false);
-      toast.error('You are already in this room.');
-      return;
-    }
-
-    const { data: existingParticipant } = await supabase
-      .from('room_participants')
-      .select('id')
-      .eq('room_id', id)
-      .eq('user_id', targetProfile.user_id)
-      .maybeSingle();
-
-    if (existingParticipant) {
-      setIsSendingInvite(false);
-      toast.info('This user is already in the room.');
-      return;
-    }
-
-    const { error: inviteError } = await supabase
-      .from('room_invites')
-      .upsert(
-        {
-          room_id: id,
-          invited_by: user.id,
-          invited_user_id: targetProfile.user_id,
-          status: 'pending',
-          responded_at: null,
-        },
-        { onConflict: 'room_id,invited_user_id' }
-      );
-
-    setIsSendingInvite(false);
-
-    if (inviteError) {
-      toast.error(inviteError.message);
-      return;
-    }
-
-    toast.success(`Invite sent to ${targetProfile.display_name || normalizedEmail}.`);
-    setInviteEmail('');
-    setShowInviteDialog(false);
-  }, [id, user, inviteEmail]);
-
   // Load room info and join as participant
   useEffect(() => {
     if (!id || !user) return;
@@ -320,13 +250,6 @@ export default function Room() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowInviteDialog(true)}
-            className="glass-card px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-xs text-foreground hover:bg-white/70 transition-colors"
-          >
-            <UserPlus className="w-3.5 h-3.5" />
-            Invite
-          </button>
           <span className="glass-card px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-xs">
             <span className="w-2 h-2 rounded-full bg-destructive animate-pulse" />
             <span className="font-medium tabular-nums text-foreground">Live</span>
@@ -379,40 +302,6 @@ export default function Room() {
           </aside>
         )}
       </div>
-
-      {showInviteDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/55 backdrop-blur-sm" onClick={() => setShowInviteDialog(false)} />
-          <div className="relative z-10 w-full max-w-md mx-4 rounded-2xl border border-white/40 bg-white/45 backdrop-blur-xl shadow-[0_10px_30px_rgba(255,255,255,0.28)] p-6">
-            <h2 className="text-xl font-semibold text-black">Invite user by email</h2>
-            <p className="text-sm text-black/70 mt-1">They will receive an invite notification in their dashboard.</p>
-            <input
-              type="email"
-              value={inviteEmail}
-              onChange={(e) => setInviteEmail(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleInviteByEmail()}
-              className="w-full mt-4 px-4 py-3 rounded-xl border border-white/70 bg-white/80 text-black text-base outline-none focus:ring-2 focus:ring-black/20 placeholder:text-black/50"
-              placeholder="user@email.com"
-              autoFocus
-            />
-            <div className="mt-5 flex justify-end gap-3">
-              <button
-                onClick={() => setShowInviteDialog(false)}
-                className="px-4 py-2 rounded-xl text-sm text-black/70 hover:text-black"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleInviteByEmail}
-                disabled={isSendingInvite}
-                className="px-4 py-2 rounded-xl text-sm bg-primary text-primary-foreground disabled:opacity-60"
-              >
-                {isSendingInvite ? 'Sending...' : 'Send invite'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {showWhiteboard && <Whiteboard onClose={() => setShowWhiteboard(false)} />}
     </div>
