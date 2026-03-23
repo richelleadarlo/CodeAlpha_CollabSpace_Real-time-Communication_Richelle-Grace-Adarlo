@@ -33,6 +33,7 @@ export interface SharedFile {
   type: string;
   sharedBy: string;
   timestamp: Date;
+  storagePath?: string;
 }
 
 const COLORS = [

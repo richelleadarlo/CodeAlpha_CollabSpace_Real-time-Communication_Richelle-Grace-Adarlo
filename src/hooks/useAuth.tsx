@@ -8,6 +8,7 @@ interface AuthContext {
   profile: { display_name: string; avatar_url: string | null } | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthCtx = createContext<AuthContext>({
@@ -16,6 +17,7 @@ const AuthCtx = createContext<AuthContext>({
   profile: null,
   loading: true,
   signOut: async () => {},
+  refreshProfile: async () => {},
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -63,8 +65,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfile(null);
   };
 
+  const refreshProfile = async () => {
+    if (!user) return;
+    await fetchProfile(user.id);
+  };
+
   return (
-    <AuthCtx.Provider value={{ user, session, profile, loading, signOut }}>
+    <AuthCtx.Provider value={{ user, session, profile, loading, signOut, refreshProfile }}>
       {children}
     </AuthCtx.Provider>
   );

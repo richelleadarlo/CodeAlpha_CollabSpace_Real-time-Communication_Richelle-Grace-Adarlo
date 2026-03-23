@@ -51,6 +51,7 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           display_name: string
+          email: string | null
           id: string
           updated_at: string
           user_id: string
@@ -59,6 +60,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           display_name: string
+          email?: string | null
           id?: string
           updated_at?: string
           user_id: string
@@ -67,11 +69,53 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           display_name?: string
+          email?: string | null
           id?: string
           updated_at?: string
           user_id?: string
         }
         Relationships: []
+      }
+      room_invites: {
+        Row: {
+          created_at: string
+          id: string
+          invited_by: string
+          invited_user_id: string
+          responded_at: string | null
+          room_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invited_by: string
+          invited_user_id: string
+          responded_at?: string | null
+          room_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invited_by?: string
+          invited_user_id?: string
+          responded_at?: string | null
+          room_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_invites_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       room_participants: {
         Row: {

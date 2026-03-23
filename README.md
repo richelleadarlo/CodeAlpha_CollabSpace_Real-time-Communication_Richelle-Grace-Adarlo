@@ -113,7 +113,7 @@ backend/
   A shared canvas lets users draw together in real time.
 
 - **File Sharing**  
-  Files are uploaded to the server and shared with others via links.
+  Files are uploaded to the server and shared with others via links which they can also download.
 
 
 Developed by Richelle Adarlo
