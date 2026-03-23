@@ -2,6 +2,8 @@
 
 A full-stack real-time communication app (similar to Zoom/Google Meet) with video conferencing, screen sharing, and collaborative tools.
 
+Visit the site live at: 
+
 ![thumbnail/screenshot overview](public/pic.png)
 
 ## Tech Stack
@@ -46,7 +48,7 @@ A full-stack real-time communication app (similar to Zoom/Google Meet) with vide
 ### 1️) Clone this Repo
 
 ```bash
-git clone https://github.com/your-username/collabspace.git
+git clone https://github.com/richelleadarlo/CodeAlpha_CollabSpace_Real-time-Communication_Richelle-Grace-Adarlo.git
 cd collabspace
 ```
 
