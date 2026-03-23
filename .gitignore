@@ -23,5 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 
-# Ignore environment variables file
+# Ignore environment variables files
 .env
+.env.*
+!.env.example
