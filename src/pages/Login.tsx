@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -27,9 +27,10 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4 relative">
       <Link
         to="/"
-        className="absolute top-5 left-5 px-3 py-2 rounded-lg text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-card transition-colors"
+        className="absolute top-5 left-5 px-3 py-2 rounded-lg text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-card transition-colors inline-flex items-center gap-1.5"
       >
-        {'<-- Home'}
+        <ArrowLeft className="w-4 h-4" />
+        <span>Home</span>
       </Link>
       <div className="w-full max-w-md animate-reveal-up">
         <div className="text-center mb-10">
