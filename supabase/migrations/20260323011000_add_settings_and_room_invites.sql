@@ -37,6 +37,10 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('profile-avatars', 'profile-avatars', true)
 ON CONFLICT (id) DO NOTHING;
 
+DROP POLICY IF EXISTS "Users can upload own profile avatar" ON storage.objects;
+DROP POLICY IF EXISTS "Users can update own profile avatar" ON storage.objects;
+DROP POLICY IF EXISTS "Public can view profile avatars" ON storage.objects;
+
 CREATE POLICY "Users can upload own profile avatar" ON storage.objects
   FOR INSERT TO authenticated
   WITH CHECK (bucket_id = 'profile-avatars' AND (storage.foldername(name))[1] = auth.uid()::text);
@@ -65,6 +69,10 @@ CREATE TABLE IF NOT EXISTS public.room_invites (
 
 ALTER TABLE public.room_invites ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Invites viewable by inviter or invitee" ON public.room_invites;
+DROP POLICY IF EXISTS "Room participants can invite users" ON public.room_invites;
+DROP POLICY IF EXISTS "Invitees can respond or inviter can resend" ON public.room_invites;
+
 CREATE POLICY "Invites viewable by inviter or invitee" ON public.room_invites
   FOR SELECT TO authenticated
   USING (auth.uid() = invited_user_id OR auth.uid() = invited_by);
@@ -87,8 +95,15 @@ CREATE POLICY "Invitees can respond or inviter can resend" ON public.room_invite
   USING (auth.uid() = invited_user_id OR auth.uid() = invited_by)
   WITH CHECK (auth.uid() = invited_user_id OR auth.uid() = invited_by);
 
+DROP TRIGGER IF EXISTS update_room_invites_updated_at ON public.room_invites;
+
 CREATE TRIGGER update_room_invites_updated_at
   BEFORE UPDATE ON public.room_invites
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
-ALTER PUBLICATION supabase_realtime ADD TABLE public.room_invites;
+DO $$
+BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE public.room_invites;
+EXCEPTION WHEN duplicate_object THEN
+  NULL;
+END $$;
