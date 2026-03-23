@@ -127,7 +127,14 @@ export default function Room() {
       <div className="flex-1 flex min-h-0">
         <div className="flex-1 flex flex-col min-w-0">
           <div className="flex-1 p-3 min-h-0">
-            <VideoGrid participants={participants} pinnedId={pinnedId} onPin={setPinnedId} />
+            <VideoGrid
+              participants={participants}
+              pinnedId={pinnedId}
+              onPin={setPinnedId}
+              localStream={localStream}
+              remoteStreams={remoteStreams}
+              localUserId={user?.id}
+            />
           </div>
           <Controls
             isMuted={isMuted}

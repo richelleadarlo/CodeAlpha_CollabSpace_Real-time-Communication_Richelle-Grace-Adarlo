@@ -1,6 +1,6 @@
 # 🎥 CollabSpace | Real-time Communication App
 
-A full-stack real-time communication app (similar to Zoom/Google Meet) with video conferencing, screen sharing, and collaborative tools.
+A full-stack real-time communication app (similar to Zoom/Google Meet) with video conferencing, screen sharing, and collaborative tools built for my CodeAlpha internship (task 4).
 
 Visit the site live at: 
 

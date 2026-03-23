@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { Participant } from '@/data/mockData';
 import Avatar from './Avatar';
 import { Mic, MicOff, Video, VideoOff } from 'lucide-react';
@@ -7,9 +8,26 @@ interface VideoGridProps {
   participants: Participant[];
   pinnedId?: string | null;
   onPin?: (id: string | null) => void;
+    localStream?: MediaStream | null;
+    remoteStreams?: Map<string, MediaStream>;
+    localUserId?: string;
 }
 
-function VideoTile({ participant, isPinned, onPin }: { participant: Participant; isPinned: boolean; onPin?: () => void }) {
+  function VideoTile({ participant, isPinned, onPin, stream, isLocal }: {
+    participant: Participant;
+    isPinned: boolean;
+    onPin?: () => void;
+    stream?: MediaStream | null;
+    isLocal?: boolean;
+  }) {
+    const videoRef = useRef<HTMLVideoElement>(null);
+
+    useEffect(() => {
+      if (videoRef.current && stream) {
+        videoRef.current.srcObject = stream;
+      }
+    }, [stream]);
+
   return (
     <button
       onClick={onPin}
@@ -18,7 +36,17 @@ function VideoTile({ participant, isPinned, onPin }: { participant: Participant;
     >
       {/* Simulated video — shows avatar */}
       <div className="absolute inset-0 bg-gradient-to-br from-foreground/5 to-foreground/10" />
-      <Avatar initials={participant.initials} color={participant.color} size="lg" isSpeaking={participant.isSpeaking} />
+        {stream ? (
+          <video
+            ref={videoRef}
+            autoPlay
+            muted={isLocal}
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        ) : (
+          <Avatar initials={participant.initials} color={participant.color} size="lg" isSpeaking={participant.isSpeaking} />
+        )}
 
       {/* Name overlay */}
       <div className="absolute bottom-3 left-3 flex items-center gap-2">
@@ -41,18 +69,24 @@ function VideoTile({ participant, isPinned, onPin }: { participant: Participant;
 }
 
 export default function VideoGrid({ participants, pinnedId, onPin }: VideoGridProps) {
+  export default function VideoGrid({ participants, pinnedId, onPin, localStream, remoteStreams, localUserId }: VideoGridProps) {
   const pinned = pinnedId ? participants.find(p => p.id === pinnedId) : null;
   const others = pinnedId ? participants.filter(p => p.id !== pinnedId) : participants;
+
+    function getStream(participantId: string): MediaStream | null | undefined {
+      if (participantId === localUserId || participantId === 'me') return localStream;
+      return remoteStreams?.get(participantId);
+    }
 
   if (pinned) {
     return (
       <div className="flex gap-3 h-full animate-fade-in">
         <div className="flex-1 min-w-0">
-          <VideoTile participant={pinned} isPinned onPin={() => onPin?.(null)} />
+            <VideoTile participant={pinned} isPinned onPin={() => onPin?.(null)} stream={getStream(pinned.id)} isLocal={pinned.id === localUserId || pinned.id === 'me'} />
         </div>
         <div className="w-44 flex flex-col gap-3 overflow-y-auto">
           {others.map((p) => (
-            <VideoTile key={p.id} participant={p} isPinned={false} onPin={() => onPin?.(p.id)} />
+              <VideoTile key={p.id} participant={p} isPinned={false} onPin={() => onPin?.(p.id)} stream={getStream(p.id)} isLocal={p.id === localUserId || p.id === 'me'} />
           ))}
         </div>
       </div>
@@ -66,7 +100,7 @@ export default function VideoGrid({ participants, pinnedId, onPin }: VideoGridPr
   return (
     <div className={`grid ${gridCols} gap-3 h-full animate-fade-in auto-rows-fr`}>
       {participants.map((p) => (
-        <VideoTile key={p.id} participant={p} isPinned={false} onPin={() => onPin?.(p.id)} />
+          <VideoTile key={p.id} participant={p} isPinned={false} onPin={() => onPin?.(p.id)} stream={getStream(p.id)} isLocal={p.id === localUserId || p.id === 'me'} />
       ))}
     </div>
   );

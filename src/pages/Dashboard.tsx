@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -19,6 +19,9 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { profile, signOut } = useAuth();
   const [search, setSearch] = useState('');
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [newRoomName, setNewRoomName] = useState('');
+  const [creatingRoom, setCreatingRoom] = useState(false);
   const [rooms, setRooms] = useState<RoomRow[]>([]);
 
   useEffect(() => {
@@ -36,21 +39,28 @@ export default function Dashboard() {
     r.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleCreateRoom = async () => {
-    const name = prompt('Room name:');
-    if (!name) return;
+  const handleCreateRoom = () => {
+    setNewRoomName('');
+    setShowCreateDialog(true);
+  };
+
+  const handleSubmitRoom = async () => {
+    if (!newRoomName.trim()) return;
+    setCreatingRoom(true);
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) { setCreatingRoom(false); return; }
 
     const { data, error } = await supabase
       .from('rooms')
-      .insert({ name, created_by: user.id })
+      .insert({ name: newRoomName.trim(), created_by: user.id })
       .select()
       .single();
 
+    setCreatingRoom(false);
     if (error) {
       toast.error(error.message);
     } else if (data) {
+      setShowCreateDialog(false);
       navigate(`/room/${data.id}`);
     }
   };
@@ -78,7 +88,7 @@ export default function Dashboard() {
             <div className="glass-card rounded-xl px-3 py-2 flex items-center gap-2 w-56">
               <Search className="w-4 h-4 text-muted-foreground shrink-0" />
               <input value={search} onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search rooms…"
+                placeholder="Search rooms..."
                 className="bg-transparent text-sm outline-none flex-1 placeholder:text-muted-foreground" />
             </div>
             <button className="glass-card control-btn w-10 h-10 rounded-xl text-muted-foreground hover:text-foreground">
@@ -131,6 +141,43 @@ export default function Dashboard() {
           </div>
         </footer>
       </div>
+
+      {showCreateDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowCreateDialog(false)}
+          />
+          <div className="relative z-10 w-full max-w-md mx-4 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-xl shadow-[0_8px_32px_rgba(255,255,255,0.15)] p-6 animate-reveal-up">
+            <h2 className="text-xl font-semibold text-foreground mb-1">Create a room</h2>
+            <p className="text-sm text-muted-foreground mb-5">Give your room a name to get started.</p>
+            <input
+              type="text"
+              value={newRoomName}
+              onChange={(e) => setNewRoomName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSubmitRoom()}
+              className="w-full px-3.5 py-2.5 rounded-xl border border-white/20 bg-white/10 text-foreground text-sm outline-none focus:ring-2 focus:ring-ring/30 transition-shadow placeholder:text-muted-foreground mb-5"
+              placeholder="e.g. Team Standup"
+              autoFocus
+            />
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowCreateDialog(false)}
+                className="px-4 py-2 rounded-xl text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSubmitRoom}
+                disabled={!newRoomName.trim() || creatingRoom}
+                className="px-5 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+              >
+                {creatingRoom ? 'Creating...' : 'Create room'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

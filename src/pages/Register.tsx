@@ -28,7 +28,7 @@ export default function Register() {
       toast.error(error.message);
       setLoading(false);
     } else {
-      toast.success('Account created! Check your email to confirm.');
+      toast.success('Account created! Please sign in.');
       navigate('/login');
     }
   };
