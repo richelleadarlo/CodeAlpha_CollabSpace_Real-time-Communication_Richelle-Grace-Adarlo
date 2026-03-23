@@ -235,7 +235,7 @@ export default function Room() {
     <div className="h-screen flex flex-col bg-background overflow-hidden">
       <header className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0 animate-reveal">
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate('/')} className="control-btn-default w-9 h-9 rounded-xl">
+          <button onClick={() => navigate('/dashboard')} className="control-btn-default w-9 h-9 rounded-xl">
             <ChevronLeft className="w-4 h-4" />
           </button>
           <div>
@@ -277,7 +277,7 @@ export default function Room() {
             onToggleMic={toggleMic}
             onToggleCamera={toggleCamera}
             onToggleScreenShare={toggleScreenShare}
-            onLeave={() => navigate('/')}
+            onLeave={() => navigate('/dashboard')}
             onToggleChat={() => togglePanel('chat')}
             onToggleFiles={() => togglePanel('files')}
             onToggleWhiteboard={() => setShowWhiteboard(!showWhiteboard)}

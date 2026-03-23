@@ -34,7 +34,13 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4 relative">
+      <Link
+        to="/"
+        className="absolute top-5 left-5 px-3 py-2 rounded-lg text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-card transition-colors"
+      >
+        {'<-- Home'}
+      </Link>
       <div className="w-full max-w-md animate-reveal-up">
         <div className="text-center mb-10">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary text-primary-foreground mb-5">
